@@ -4,11 +4,16 @@
 var spawn, posProc, callback;
 var resultBuffer = '';
 const INFO = "info";
+const NO_BEST_MOVE = "nobestmove";
 const BEST_MOVE = "bestmove";
 const POSITION = "position";
 const UCCI = "ucci";
 const IS_READY = "isready";
 const GO = "go";
+const STOP = "stop";
+
+const RESTART_COMMAND = "restart-ucci";
+
 var IN_GO_WAITING = false;
 
 function connect(delayed) {
@@ -56,9 +61,18 @@ function init() {
     }
 
     switch (true) {
+      // 如果含nobestmove，则为结束
+      case resultBuffer.indexOf(NO_BEST_MOVE) !== -1:
+        console.log('-=-=-=-=in no best move: ', textChunk)
+        IN_GO_WAITING = false;
+        resultBuffer += textChunk;
+        callback(null, resultBuffer);
+        resultBuffer = ''; // 清空缓存
+        break;
+      
       // 如果含bestmove，则为结束
       case resultBuffer.indexOf(BEST_MOVE) !== -1:
-        console.log('-=-=-=-=in best move: ',textChunk )
+        console.log('-=-=-=-=in best move: ', textChunk)
         IN_GO_WAITING = false;
         resultBuffer += textChunk;
         callback(null, resultBuffer);
@@ -67,7 +81,7 @@ function init() {
 
         // 如果含INFO，则将信息buffer后继续，不callback，继续接
       case resultBuffer.indexOf(INFO) !== -1:
-         console.log('-=-=-=-=in info: ', textChunk)
+        console.log('-=-=-=-=in info: ', textChunk)
         resultBuffer += textChunk;
         break;
 
@@ -94,6 +108,11 @@ function init() {
 init();
 
 function send(command, callbackFun) {
+  if (command === RESTART_COMMAND) {
+    IN_GO_WAITING = false;
+    callbackFun(null, 'Server might be restared.')
+    return;
+  }
   callback = callbackFun;
   posProc.stdin.write(command + '\n');
   // console.log('callback is: ', callback)
@@ -106,6 +125,12 @@ function send(command, callbackFun) {
     case command.indexOf(GO) !== -1:
       IN_GO_WAITING = true;
       break;
+    case command.indexOf(STOP) !== -1:
+    console.log('in server stop ....')
+      IN_GO_WAITING = false;
+      callback(null, "Stopped");
+      break;
+      
     default:
       // When command with no resonpse, such as position,
       // send http response instead, to prevent forever waiting
