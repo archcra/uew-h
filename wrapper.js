@@ -63,16 +63,14 @@ function init() {
     switch (true) {
       // 如果含nobestmove，则为结束
       case resultBuffer.indexOf(NO_BEST_MOVE) !== -1:
-        console.log('-=-=-=-=in no best move: ', textChunk)
         IN_GO_WAITING = false;
         resultBuffer += textChunk;
         callback(null, resultBuffer);
         resultBuffer = ''; // 清空缓存
         break;
-      
-      // 如果含bestmove，则为结束
+
+        // 如果含bestmove，则为结束
       case resultBuffer.indexOf(BEST_MOVE) !== -1:
-        console.log('-=-=-=-=in best move: ', textChunk)
         IN_GO_WAITING = false;
         resultBuffer += textChunk;
         callback(null, resultBuffer);
@@ -81,15 +79,16 @@ function init() {
 
         // 如果含INFO，则将信息buffer后继续，不callback，继续接
       case resultBuffer.indexOf(INFO) !== -1:
-        console.log('-=-=-=-=in info: ', textChunk)
         resultBuffer += textChunk;
         break;
 
       default:
-        console.log('-=-=-=-=others: ', textChunk, IN_GO_WAITING)
         if (!IN_GO_WAITING) {
           // 又没有bestmove,又没有info，则是其它指令，直接返回吧。
-          callback(null, textChunk);
+          if (callback) { // When first startup, if there is console response,
+            // then callback is null. Might cause error.
+            callback(null, textChunk);
+          }
         } else {
           // 还是INFO的等待返回中，必须继续等
           resultBuffer += textChunk;
@@ -126,11 +125,11 @@ function send(command, callbackFun) {
       IN_GO_WAITING = true;
       break;
     case command.indexOf(STOP) !== -1:
-    console.log('in server stop ....')
+      // This must have an imediate bestmove response, so do not callback now.
+      console.log('Calculation stops ....')
       IN_GO_WAITING = false;
-      callback(null, "Stopped");
       break;
-      
+
     default:
       // When command with no resonpse, such as position,
       // send http response instead, to prevent forever waiting
