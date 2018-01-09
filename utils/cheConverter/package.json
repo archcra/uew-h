@@ -1,0 +1,12 @@
+{
+    "name": "enduro_mirror",
+    "version": "1.0.0",
+    "description": "Personal portfolio theme for enduro.js",
+    "author": "Martin Gottweis",
+    "license": "ISC",
+    "dependencies": {
+        "xml2js": "*",
+        "underscore":"*",
+        "moment":"*"
+    }
+}

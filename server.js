@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.use(function(req, res, next) {
+  // 如何工作在Nginx后端，这个还要考虑去掉：加在nginx处
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, XMLHttpRequest, Content-Type, Accept");
@@ -23,12 +24,12 @@ app.get('/', function(req, res) {
   res.render('index');
 })
 app.post('/', function(req, res) {
-  console.log('body command is: ', req.body.command)
   wrapper.send(req.body.command, function(error, data) {
-    // var textChunk = data.toString('utf8');
-    // console.log('error, data: ', error, textChunk);
     if (!error) {
-      res.send({data:data, commandId: req.body.commandId});
+      res.send({
+        data: data,
+        commandId: req.body.commandId
+      });
     } else {
       console.log("Error: ", error);
     }
@@ -37,5 +38,5 @@ app.post('/', function(req, res) {
 })
 
 app.listen(process.env.SERVER_PORT, function() {
-  console.log('UEW-H Server started, listening on port '+ process.env.SERVER_PORT)
+  console.log('UEW-H Server started, listening on port ' + process.env.SERVER_PORT)
 })
